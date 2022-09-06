@@ -2,34 +2,34 @@ name: AWS Lambda CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
-
+    branches: [master]
+# touch
 jobs:
   build:
     name: Build Lambda Layer
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16.x
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
 
-    - name: Install Packages
-      run: npm install
+      - name: Install Packages
+        run: npm install
 
-    - name: Create Lambda Layer
-      run: make chrome_aws_lambda.zip
+      - name: Create Lambda Layer
+        run: make chrome_aws_lambda.zip
 
-    - name: Upload Layer Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: chrome_aws_lambda
-        path: chrome_aws_lambda.zip
+      - name: Upload Layer Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: chrome_aws_lambda
+          path: chrome_aws_lambda.zip
 
   execute:
     name: Lambda (Node ${{ matrix.version }}.x)
@@ -43,24 +43,24 @@ jobs:
           - 14
           - 16
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Setup Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.x'
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
 
-    - name: Setup AWS SAM CLI
-      uses: aws-actions/setup-sam@v2
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
 
-    - name: Download Layer Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: chrome_aws_lambda
+      - name: Download Layer Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: chrome_aws_lambda
 
-    - name: Provision Layer
-      run: unzip chrome_aws_lambda.zip -d _/amazon/code
+      - name: Provision Layer
+        run: unzip chrome_aws_lambda.zip -d _/amazon/code
 
-    - name: Invoke Lambda on SAM
-      run: sam local invoke --template _/amazon/template.yml --event _/amazon/events/${{ matrix.event }}.json node${{ matrix.version }} 2>&1 | (grep 'Error' && exit 1 || exit 0)
+      - name: Invoke Lambda on SAM
+        run: sam local invoke --template _/amazon/template.yml --event _/amazon/events/${{ matrix.event }}.json node${{ matrix.version }} 2>&1 | (grep 'Error' && exit 1 || exit 0)
